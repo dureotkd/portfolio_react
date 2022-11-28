@@ -1,8 +1,13 @@
 import axios from "axios";
 import React from "react";
+import { useNavigate } from "react-router-dom";
+
+axios.defaults.withCredentials = true;
 
 function Join() {
   const [data, setData] = React.useState({});
+
+  const navigation = useNavigate();
 
   const 데이터변경 = (event) => {
     const cloneData = { ...data };
@@ -16,7 +21,13 @@ function Join() {
       method: "POST",
       data: data,
     }).then((response) => {
-      console.log(response);
+      if (response.data.message) {
+        alert(response.data.message);
+      }
+
+      if (response.data.code === "success") {
+        navigation("/Login");
+      }
     });
   };
 

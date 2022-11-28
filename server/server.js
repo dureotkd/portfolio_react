@@ -61,15 +61,83 @@ app.get("/", (req, res) => {
   res.send("Hello");
 });
 
-app.post("/join", (req, res) => {
+app.post("/autoLogin", (req, res) => {
+  res.send(req.session.loginUser);
+});
+
+app.post("/login", async (req, res) => {
+  const { id, pw } = req.body;
+
+  const result = {
+    code: "success",
+    message: "로그인 되었습니다",
+  };
+
+  if (id === "") {
+    result.code = "fail";
+    result.message = "아이디를 입력해주세요";
+  }
+
+  if (pw === "") {
+    result.code = "fail";
+    result.message = "비밀번호를 입력해주세요";
+  }
+
+  const user = await 디비실행(
+    `SELECT * FROM user WHERE id='${id}' AND password = '${pw}'`
+  );
+
+  if (user.length === 0) {
+    result.code = "fail";
+    result.message = "아이디가 존재하지 않습니다";
+  }
+
+  if (result.code === "fail") {
+    res.send(result);
+    return;
+  }
+
+  req.session.loginUser = user[0];
+  req.session.save();
+
+  res.send(result);
+});
+
+app.post("/join", async (req, res) => {
   const { id, nickname, pw } = req.body;
 
-  /**
-   * DB 연결!!
-   */
-  console.log(req.body);
+  const result = {
+    code: "success",
+    message: "회원가입 되었습니다",
+  };
 
-  res.send("/");
+  if (id === "") {
+    result.code = "fail";
+    result.message = "아이디를 입력해주세요";
+  }
+
+  if (pw === "") {
+    result.code = "fail";
+    result.message = "비밀번호를 입력해주세요";
+  }
+
+  const user = await 디비실행(`SELECT * FROM user WHERE id='${id}'`);
+
+  if (user.length > 0) {
+    result.code = "fail";
+    result.message = "이미 동일한 아이디가 존재합니다";
+  }
+
+  if (result.code === "fail") {
+    res.send(result);
+    return;
+  }
+
+  await 디비실행(
+    `INSERT INTO user(id,password,nickname) VALUES('${id}','${pw}','${nickname}')`
+  );
+
+  res.send(result);
 });
 
 app.listen(port, () => {
